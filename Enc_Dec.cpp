@@ -6,7 +6,9 @@ using namespace std;
 
 string globtree = "";
 
-FILE *fl1, *fl2;
+FILE *fl1, *fl2, *fkey, *dfl1, *dfl2, *dfl;
+
+string k;
 
 class node  
 {  
@@ -50,6 +52,7 @@ void printLevelOrder(node* root)
 /* Print nodes at a given level */
 void printGivenLevel(node* root, int level)  
 {  
+	//cout << "__" << globtree << "__";
     if (root == NULL)  
         return;  
     if (level == 1)  
@@ -281,9 +284,9 @@ int search(char arr[], int strt, int end, char value)
     }  
 }  
 
-node* buildTree(char in[], char pre[], int inStrt, int inEnd)  
+node* buildTree(char in[], char pre[], int inStrt, int inEnd,int n)  
 {  
-    static int preIndex = 0;  
+    
   
     if (inStrt > inEnd)  
         return NULL;  
@@ -291,7 +294,7 @@ node* buildTree(char in[], char pre[], int inStrt, int inEnd)
     /* Pick current node from Preorder 
     traversal using preIndex  
     and increment preIndex */
-    node* tNode = newNode(pre[preIndex++]);  
+    node* tNode = newNode(pre[n++]);  
   
     /* If this node has no children then return */
     if (inStrt == inEnd)  
@@ -302,8 +305,8 @@ node* buildTree(char in[], char pre[], int inStrt, int inEnd)
   
     /* Using index in Inorder traversal, construct left and  
     right subtress */
-    tNode->left = buildTree(in, pre, inStrt, inIndex - 1);  
-    tNode->right = buildTree(in, pre, inIndex + 1, inEnd);  
+    tNode->left = buildTree(in, pre, inStrt, inIndex - 1,n);  
+    tNode->right = buildTree(in, pre, inIndex + 1, inEnd,n);  
   
     return tNode;  
 }  
@@ -338,7 +341,8 @@ string First_lvl(string s)
 	
 	for(int i = 0; i < strlen; i++)
 	{
-		asci[i] = (int)s[i];
+		asci[i] = (int)s[i] - NULL;
+		//cout << s[i] << " " << asci[i] << " ";
  	}
  	
  	for(int i = 0; i < strlen; i++)
@@ -390,21 +394,30 @@ string Second_lvl(string s)
 	
 	string key = preorder(root);
 	
-	cout << "\nThe encryption key is: " << key;
+	
+	const char *c2 = key.c_str();
+	
+	key = key + " ";
+	
+	const char *key1 = key.c_str();
+    fputs(key1, fkey);
+	
+	k = key;
 		
 	return txt;
 }
 
 string First_lvld(char ino[], char pro[],int l)
 {
-	node *root = buildTree(ino,pro,0,l-1);
+	node *root = buildTree(ino,pro,0,l-1,0);
 	
 	reverseAlternate(root);
 	
 	printLevelOrder(root);
 	
 	string s = globtree;
-	
+	//cout << globtree << "****";
+	globtree = "";
 	return s;
 }
 
@@ -462,6 +475,11 @@ string Second_lvld(string s)
 
 string encrypt(string s)
 {
+	if(s.length() % 2 != 0)
+	{
+		//cout << "space";
+		s = s + " ";
+	} 
 	s = First_lvl(s);
 	s = Second_lvl(s);
 	
@@ -497,7 +515,7 @@ string decrypt(string key,string txt)
 void enc_file(const char *dir)
 {
 	fl1 = fopen(dir,"r");
-	cout << "f open";
+//	cout << "f open";
 	
 	
 	string c;
@@ -515,16 +533,18 @@ void enc_file(const char *dir)
 		}
 	}
 	
-	cout << c;
+	//cout << c;
 	
 	const char *c1 = c.c_str();
 	char s[1000];
 	
 	fl2 = fopen(c1,"w+");
 	
+	fclose(fopen("key.txt", "w"));
+	fkey = fopen("key.txt","w");
+	
 	while(!feof(fl1))
     {
-    	cout << "abcasaca";
         char a = ' ';
         
         string enc = "";
@@ -532,6 +552,7 @@ void enc_file(const char *dir)
         while(a != EOF)
         {
         	a = fgetc(fl1);
+        	cout << a << " ";
         	if(a == ' ')
         	{
         		enc = encrypt(enc);
@@ -540,18 +561,78 @@ void enc_file(const char *dir)
         		fputs(enc1, fl2);
         		enc = "";
 			}
-			else
+			else if(a != EOF)
 			{
 				enc = enc + a;
 			}
+			
 		}
+		cout << enc;
+		enc = encrypt(enc);
+		cout << enc;
+        const char *enc1 = enc.c_str();
+        fputs(enc1, fl2);
+        enc = "";
         
         
     }
     fclose(fl1);
     fclose(fl2);
+    fclose(fkey);
 }
 
+
+dec_file(const char *dir,const char *key)
+{
+	dfl1 = fopen(dir,"r");
+	dfl2 = fopen(key,"r");
+	dfl = fopen("Converted_file.txt","w");
+	
+	
+	while(!feof(dfl1))
+    {
+        char a = ' ';
+        char b = ' ';
+        string enc = "";
+        string keys = "";
+        string anss = "";
+        
+        while(a != EOF)
+        { 
+        	a = fgetc(dfl1);
+        	b = fgetc(dfl2);
+        	cout << b << a << " ";
+        	if(a == ' ')
+        	{
+        		cout << enc << keys << " ------- ";
+        		anss = decrypt(keys,enc);
+        		anss = anss + " ";
+        		cout << anss << " ....... ";
+        		const char *enc1 = anss.c_str();
+        		fputs(enc1, dfl);
+        		
+        		anss = "";
+        		enc = "";
+        		keys = "";
+			}
+			else
+			{
+				enc = enc + a;
+				keys = keys + b;
+			}
+			
+		}
+		anss = decrypt(keys,enc);
+        const char *enc1 = anss.c_str();
+        fputs(enc1, dfl);
+        anss = "";
+        enc = "";
+        keys = "";
+    }
+    fclose(dfl1);
+    fclose(dfl2);
+    fclose(dfl);
+}
 
 
 main()
@@ -594,6 +675,7 @@ main()
 							string ans = encrypt(str);
 	
 							cout << "\nThe Encrypted text is: " << ans;	
+							cout << "\nThe Encryption key is: " << k;
 						}
 						break;
 						
@@ -616,17 +698,53 @@ main()
 			break;
 		case 2:
 			{
-				string key, txt;
+				
+				cout << "Enter the choice:\n1. Decrypt Text\n2. Decrypt File\n";
+				int ch1;
+				cin >> ch1;
+				
+				switch(ch1)
+				{
+					case 1:
+						{
+							string key, txt;
 	
-				cout << "\nEnter the Encrypted text: ";
-				getline(cin,txt);
+							cout << "\nEnter the Encrypted text: ";
+							getline(cin,txt);
+							getline(cin,txt);
 	
-				cout << "\nEnter the Encryption key: ";
-				getline(cin,key);
+							cout << "\nEnter the Encryption key: ";
+							getline(cin,key);
 		
-				string ans1 = decrypt(key,txt);
+							string ans1 = decrypt(key,txt);
 		
-				cout << "\nThe text is: " << ans1;
+							cout << "\nThe text is: " << ans1;
+						}
+						
+						break;
+						
+					case 2:
+						{
+							cout << "Enter the directory of file to Decrypt";
+							string f_dir;
+							getline (cin,f_dir);
+							getline (cin,f_dir);
+							
+							const char* fdir = f_dir.c_str();
+							
+							//cout << fdir;
+							
+							cout << "Enter the directory of key";
+							string f_dirk;
+							getline (cin,f_dirk);
+							
+							const char* fdirk = f_dirk.c_str();
+							
+							dec_file(fdir,fdirk);
+						}
+					
+				}
+				
 			}
 			break;
 			

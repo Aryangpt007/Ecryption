@@ -274,42 +274,62 @@ void reverseAlternate(node *root)
     modifyTree(root, arr, &index, 0); 
 } 
 
-int search(char arr[], int strt, int end, char value)  
-{  
-    int i;  
-    for (i = strt; i <= end; i++)  
-    {  
-        if (arr[i] == value)  
-            return i;  
-    }  
+int search(char arr[], int strt, int end, char value) 
+{ 
+    int i; 
+    for (i = strt; i <= end; i++) { 
+        if (arr[i] == value) 
+            break; 
+    } 
+    return i; 
 }  
-
-node* buildTree(char in[], char pre[], int inStrt, int inEnd,int n)  
-{  
-    
   
-    if (inStrt > inEnd)  
-        return NULL;  
+/* Recursive function to construct binary of size n 
+   from  Inorder traversal in[] and Postorder traversal 
+   post[].  Initial values of inStrt and inEnd should 
+   be 0 and n -1.  The function doesn't do any error 
+   checking for cases where inorder and postorder 
+   do not form a tree */
+node* buildUtil(char in[], char post[], int inStrt, 
+                int inEnd, int* pIndex) 
+{ 
+    // Base case 
+    if (inStrt > inEnd) 
+        return NULL; 
   
-    /* Pick current node from Preorder 
-    traversal using preIndex  
-    and increment preIndex */
-    node* tNode = newNode(pre[n++]);  
+    /* Pick current node from Postorder traversal using 
+       postIndex and decrement postIndex */
+    node* Node = newNode(post[*pIndex]); 
+    (*pIndex)++; 
   
     /* If this node has no children then return */
-    if (inStrt == inEnd)  
-        return tNode;  
+    if (inStrt == inEnd) 
+        return Node; 
   
-    /* Else find the index of this node in Inorder traversal */
-    int inIndex = search(in, inStrt, inEnd, tNode->data);  
+    /* Else find the index of this node in Inorder 
+       traversal */
+    int iIndex = search(in, inStrt, inEnd, Node->data); 
   
-    /* Using index in Inorder traversal, construct left and  
-    right subtress */
-    tNode->left = buildTree(in, pre, inStrt, inIndex - 1,n);  
-    tNode->right = buildTree(in, pre, inIndex + 1, inEnd,n);  
+    /* Using index in Inorder traversal, construct left and 
+       right subtress */
+    Node->left = buildUtil(in, post, inStrt, iIndex - 1, pIndex);
+    Node->right = buildUtil(in, post, iIndex + 1, inEnd, pIndex); 
+     
   
-    return tNode;  
-}  
+    return Node; 
+} 
+  
+// This function mainly initializes index of root 
+// and calls buildUtil() 
+node* buildTree(char in[], char post[], int n) 
+{ 
+    int pIndex = 0; 
+    return buildUtil(in, post, 0, n - 1, &pIndex); 
+} 
+  
+/* Function to find index of value in arr[start...end] 
+   The function assumes that value is postsent in in[] */
+
 
 
 
@@ -326,7 +346,7 @@ node* insertLevelOrder(char arr[], node* root,
         root->left = insertLevelOrder(arr, root->left, 2 * i + 1, n); 
   
         // insert right child 
-        root->right = insertLevelOrder(arr, root->right, 2 * i + 2, n); 
+		root->right = insertLevelOrder(arr, root->right, 2 * i + 2, n); 
     } 
     return root; 
 } 
@@ -336,12 +356,13 @@ string First_lvl(string s)
 	int strlen = s.size();
 	
 	int asci[strlen];
+        
 	int pos[strlen];
 
 	
 	for(int i = 0; i < strlen; i++)
 	{
-		asci[i] = (int)s[i] - NULL;
+		asci[i] = (int)s[i];
 		//cout << s[i] << " " << asci[i] << " ";
  	}
  	
@@ -409,7 +430,7 @@ string Second_lvl(string s)
 
 string First_lvld(char ino[], char pro[],int l)
 {
-	node *root = buildTree(ino,pro,0,l-1,0);
+	node *root = buildTree(ino,pro,l);
 	
 	reverseAlternate(root);
 	
@@ -488,8 +509,8 @@ string encrypt(string s)
 
 string decrypt(string key,string txt)
 {
-	int strlen1 = key.size();
-	int strlen2 = txt.size();
+	int strlen1 = key.size(); //preorder
+	int strlen2 = txt.size(); //inorder
 	
 	char ino[strlen2];
 	char pro[strlen1];
@@ -601,13 +622,13 @@ dec_file(const char *dir,const char *key)
         { 
         	a = fgetc(dfl1);
         	b = fgetc(dfl2);
-        	cout << b << a << " ";
+        	//cout << b << a << " ";
         	if(a == ' ')
         	{
-        		cout << enc << keys << " ------- ";
+        		//cout << enc << keys << " ------- ";
         		anss = decrypt(keys,enc);
         		anss = anss + " ";
-        		cout << anss << " ....... ";
+        		//cout << anss << " ....... ";
         		const char *enc1 = anss.c_str();
         		fputs(enc1, dfl);
         		
